@@ -117,7 +117,7 @@ public:
         return temp->value == value;
     }
 
-    void printList() const {
+    void printList() {
         Node* temp = head;
         while (temp != nullptr) {
             std::cout << temp->value << " -> ";
@@ -144,8 +144,8 @@ int main() {
     list.insertAtEnd(30);
     list.insertAtEnd(40);
     
-    std::cout << "check if number 20 is on list: " << list.checkValue(20) << std::endl;
-    std::cout << "check if number 20 is on list: " << list.checkValue(312) << std::endl;
+    std::cout << "check if number 20 is on list? " << list.checkValue(20) << std::endl;
+    std::cout << "check if number 312 is on list? " << list.checkValue(312) << std::endl;
 
     std::cout << "list after insertions: ";
     list.printList();
