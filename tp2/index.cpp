@@ -2,20 +2,20 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <math.h>
+#include <cmath>
 
 class Graph {
 private:
-    std::map<char, std::set<char>> adjList; // Lista de adjacência
+    std::map<char, std::set<char> > adjList;
     std::vector<char> vertices;
 
 public:
-    Graph(int vertexCount, char startLetter = 'a', int sum = 1) {
+    Graph(int vertexCount, char startLetter = 'a') {
         char vertex = startLetter;
-        for (int i = sum, count = 0; count < vertexCount; i++, count++) {
+        for (int i = 0; i < vertexCount; i++) {
             vertices.push_back(vertex);
             adjList[vertex] = std::set<char>();
-            vertex += sum == 1 ? 1 : i;
+            vertex++;
         }
     }
 
@@ -35,8 +35,7 @@ public:
 
     void printGraph() const {
         std::cout << "Vértices: { ";
-        for (char v : vertices)
-        {
+        for (char v : vertices) {
             std::cout << v << " ";
         }
         std::cout << "}" << std::endl;
@@ -44,7 +43,7 @@ public:
         std::cout << "Arestas: { ";
         for (const auto &pair : adjList) {
             for (char neighbor : pair.second) {
-                if (pair.first < neighbor) { // Evita duplicação de arestas
+                if (pair.first < neighbor) {
                     std::cout << "{" << pair.first << "," << neighbor << "} ";
                 }
             }
@@ -52,62 +51,57 @@ public:
         std::cout << "}" << std::endl;
     }
 
-    int findSubgraphs() {
-        int result = 0;
-        int vertexCount = vertices.size();
-        for (int i = 1; i <= vertexCount; i++) {
-            int combination = (factorial(vertexCount) / (factorial(vertexCount - i) * factorial(i)));
-            int x = pow(2, (i * (i - 1) / 2)) * combination;
-            result += x;
-            char letter = 'a';
-            int sum = 1;
-            int p = 1;
-            for (int j = 0; j < x; j++) {
-                if(j == 0) letter = 'a';
-                // criar todas as combinações possiveis com os subgrafos não-direcionado
-                // 4 x 1 | 6 x 2 | 8 x 4 | 64 x 1
-                if (i == 1) {
-                    Graph subgraph(i, letter);
-                    subgraph.printGraph();
-                    letter+=1;
-                } else if(i == 2) {
-                    if(combination==j) {
-                        letter += 1;
-                        sum = 1;
-                    } else if(j == (combination+vertexCount)) {
-                        letter += 1;
-                        sum = 1;
-                    }
-                    if(j % 2 == 0) {
-                        if(pow(2, p) == j) {
-                            sum++;
-                            p++;
-                        }
-                        Graph subgraph(i, letter, sum);
-                        subgraph.initCompleteGraph();
-                        subgraph.printGraph();
-                    } else {
-                        Graph subgraph(i, letter, sum);
-                        subgraph.printGraph();
-                    }
-                } else if (i == 3) {
+    void generateSubgraphs(int k) {
+        std::vector<std::vector<char> > combinations;
+        std::vector<char> currentCombination;
+        generateCombinations(vertices, currentCombination, 0, k, combinations);
 
-                }
+        std::cout << "\nSubgrafos com " << k << " vértices:\n";
+        for (const auto& combination : combinations) {
+            Graph subgraph(k, combination[0]);
+            for (char v : combination) {
+                subgraph.addVertex(v);
             }
+            subgraph.initCompleteGraph();
+            subgraph.printGraph();
         }
-        return result;
     }
 
-    Graph generateSubgraph() {
-
+    int findSubgraphs() {
+        int totalSubgraphs = 0;
+        for (int i = 1; i <= vertices.size(); i++) {
+            generateSubgraphs(i);
+            totalSubgraphs += combination(vertices.size(), i);
+        }
+        return totalSubgraphs;
     }
 
-    int factorial(int n) {
-        int result = 1;
-        for (int i = 1; i <= n; i++) {
-            result *= i;
+    // Função para gerar combinações de vértices
+    void generateCombinations(const std::vector<char>& vertices, std::vector<char>& currentCombination,
+                              int start, int k, std::vector<std::vector<char> >& result) {
+        if (currentCombination.size() == k) {
+            result.push_back(currentCombination);
+            return;
         }
-        return result;
+
+        for (int i = start; i < vertices.size(); i++) {
+            currentCombination.push_back(vertices[i]);
+            generateCombinations(vertices, currentCombination, i + 1, k, result);
+            currentCombination.pop_back();
+        }
+    }
+
+    // Função para adicionar vértices ao subgrafo
+    void addVertex(char v) {
+        if (adjList.find(v) == adjList.end()) {
+            adjList[v] = std::set<char>();
+        }
+    }
+
+    // Função para calcular combinações matemáticas (nCr)
+    int combination(int n, int r) {
+        if (r == 0 || r == n) return 1;
+        return combination(n - 1, r - 1) + combination(n - 1, r);
     }
 };
 
@@ -117,11 +111,11 @@ int main() {
     std::cin >> numVertices;
 
     Graph g(numVertices);
-
     g.initCompleteGraph();
     g.printGraph();
-    int subgraphs =  g.findSubgraphs();
-    std::cout << "Número de subgrafos: " << subgraphs << std::endl;
+    
+    int totalSubgraphs = g.findSubgraphs();
+    std::cout << "Número total de subgrafos: " << totalSubgraphs << std::endl;
 
     return 0;
 }
