@@ -1,5 +1,6 @@
 #include <iostream>
 #include <functional>
+#include <queue>
 
 template <typename T>
 class Node {
@@ -10,6 +11,90 @@ public:
     Node(T x) {
         value = x;
         next = nullptr;
+    }
+};
+
+template <typename T>
+class Queue {
+private:
+    Node<T>* head;
+
+public:
+    int length;
+
+    Queue() {
+        head = nullptr;
+        length = 0;
+    }
+
+    void insert(T value) {
+        Node<T>* node = new Node<T>(value);
+        if (head == nullptr) {
+            head = node;
+        } else {
+            Node<T>* temp = head;
+            while (temp->next != nullptr) {
+                temp = temp->next;
+            }
+            temp->next = node;
+        }
+        length++;
+    }
+
+    T remove() {
+        Node<T>* temp = head;
+        Node<T>* prev = nullptr;
+
+        if (temp == nullptr) {
+            return T();
+        }
+
+        while (temp->next != nullptr) {
+            prev = temp;
+            temp = temp->next;
+        }
+
+        if (temp == nullptr) {
+            return T();
+        }
+
+        prev->next = temp->next;
+        delete temp;
+
+        length--;
+
+        return value;
+    }
+
+    bool checkValue(T value) {
+        Node<T>* temp = head;
+
+        if (temp == nullptr) {
+            return false;
+        }
+
+        while (temp != nullptr && temp->value != value) {
+            temp = temp->next;
+        }
+
+        return temp != nullptr;
+    }
+
+    void forEach(std::function<void(T)> func) {
+        Node<T>* temp = head;
+        while (temp != nullptr) {
+            func(temp->value);
+            temp = temp->next;
+        }
+    }
+
+    ~Queue() {
+        Node<T>* temp;
+        while (head != nullptr) {
+            temp = head;
+            head = head->next;
+            delete temp;
+        }
     }
 };
 
@@ -136,7 +221,6 @@ public:
     void dfs() {
         std::cout << "Vertex " << value << " ";
         visited = true;
-        // chamar forEach da lista
         edges.forEach([this](Vertex* neighbor) {
             if (!neighbor->visited) {
                 neighbor->dfs();
@@ -191,6 +275,28 @@ public:
         });
     }
 
+    void bfs() {
+        Vertex* startVertex = vertex.getHead()->value;
+        if (!startVertex) return;
+
+        std::queue<Vertex*> q;
+        startVertex->visited = true;
+        q.push(startVertex);
+
+        while (!q.empty()) {
+            Vertex* current = q.front();
+            q.pop();
+            std::cout << "Vertex " << current->value << " ";
+
+            current->edges.forEach([&q](Vertex* neighbor) {
+                if (!neighbor->visited) {
+                    neighbor->visited = true;
+                    q.push(neighbor);
+                }
+            });
+        }
+    }
+
     void printGraph() {
         Node<Vertex*>* temp = vertex.getHead();
         while (temp != nullptr) {
@@ -198,6 +304,12 @@ public:
             v->printEdges();
             temp = temp->next;
         }
+    }
+
+    void resetVisited() {
+        vertex.forEach([](Vertex* v) {
+            v->visited = false;
+        });
     }
 
     ~Graph() {
@@ -226,7 +338,13 @@ int main() {
 
     g.printGraph();
 
+    std::cout << "\nDFS: \n";
     g.dfs();
+
+    g.resetVisited();
+
+    std::cout << "\nBFS: \n";
+    g.bfs();
 
     return 0;
 }
